@@ -5,62 +5,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from basic_code import data_generator
 
-cate2label = {'CK+':{0: 'Happy', 1: 'Angry', 2: 'Disgust', 3: 'Fear', 4: 'Sad', 5: 'Contempt', 6: 'Surprise',
-                     'Angry': 1,'Disgust': 2,'Fear': 3,'Happy': 0,'Contempt': 5,'Sad': 4,'Surprise': 6},
-
-              'AFEW':{0: 'healthy', 1: 'dementia', 'healthy': 0, 'dementia': 1}
-              #'AFEW':{0: 'Happy',1: 'Angry',2: 'Disgust',3: 'Fear',4: 'Sad',5: 'Neutral',6: 'Surprise',
-              #    'Angry': 1,'Disgust': 2,'Fear': 3,'Happy': 0,'Neutral': 5,'Sad': 4,'Surprise': 6}
-    }
-
-def ckplus_faces_baseline(video_root, video_list, fold, batchsize_train, batchsize_eval):
-    train_dataset = data_generator.TenFold_VideoDataset(
-                                        video_root=video_root,
-                                        video_list=video_list,
-                                        rectify_label=cate2label['CK+'],
-                                        transform=transforms.Compose([transforms.Resize(224), transforms.RandomHorizontalFlip(), transforms.ToTensor()]),
-                                        fold=fold,
-                                        run_type='train'
-                                        )
-
-    val_dataset = data_generator.TenFold_VideoDataset(
-                                        video_root=video_root,
-                                        video_list=video_list,
-                                        rectify_label=cate2label['CK+'],
-                                        transform=transforms.Compose([transforms.Resize(224), transforms.ToTensor()]),
-                                        fold=fold,
-                                        run_type='test'
-                                        )
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batchsize_train, shuffle=True, num_workers=8,pin_memory=True)
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=batchsize_eval, shuffle=False, num_workers=8, pin_memory=True)
-    return train_loader, val_loader
-
-def ckplus_faces_fan(video_root, video_list, fold, batchsize_train, batchsize_eval):
-    train_dataset = data_generator.TenFold_TripleImageDataset(
-                                        video_root=video_root,
-                                        video_list=video_list,
-                                        rectify_label=cate2label['CK+'],
-                                        transform=transforms.Compose([
-                                            transforms.Resize(224), transforms.RandomHorizontalFlip(), transforms.ToTensor()]),
-                                        fold=fold,
-                                        run_type='train',
-                                        )
-
-    val_dataset = data_generator.TenFold_VideoDataset(
-                                        video_root=video_root,
-                                        video_list=video_list,
-                                        rectify_label=cate2label['CK+'],
-                                        transform=transforms.Compose([transforms.Resize(224), transforms.ToTensor()]),
-                                        fold=fold,
-                                        run_type='test'
-                                        )
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batchsize_train, shuffle=True, num_workers=8,pin_memory=True)
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=batchsize_eval, shuffle=False, num_workers=8, pin_memory=True)
-    return train_loader, val_loader
+cate2label = {'AFEW':{0: 'healthy', 1: 'dementia', 'healthy': 0, 'dementia': 1}}
 
 def afew_faces_baseline(root_train, list_train, batchsize_train, root_eval, list_eval, batchsize_eval):
 
@@ -110,14 +55,12 @@ def afew_faces_fan(root_train, list_train, batchsize_train, root_eval, list_eval
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batchsize_train, shuffle=True,
-        pin_memory=True, drop_last=True)
-        #num_workers = 8, pin_memory = True, drop_last = True)
+        num_workers = 8, pin_memory = True, drop_last = True)
 
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=batchsize_eval, shuffle=False,
-        pin_memory=True)
-        #num_workers = 8, pin_memory = True)
+        num_workers = 8, pin_memory = True)
 
 
     return train_loader, val_loader

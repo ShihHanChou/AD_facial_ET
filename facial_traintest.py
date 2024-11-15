@@ -22,26 +22,22 @@ def main():
     task = 'PupilCalib' 
     #task = 'CookieTheft'
     #task = 'Reading'
-    save_path = './model_10_Harshinee_task/'+task
-    for itt in range(2,11):  
+    save_path = './'+task
+    for itt in range(1,11):  
         ''' Load data '''
         for t_fold in range(10):
 
             best_acc = 0
             at_type = ['self-attention', 'self_relation-attention'][args.at_type]
-            logger = util.Logger('./log/','fan_afew')
+            logger = util.Logger('./log/','facial')
             logger.print('The attention method is {:}, learning rate: {:}'.format(at_type, args.lr))
 
             cross_fold = str(t_fold)
-            #root_train = './data/face/train_afew_whole_video_concat'
-            root_train = './data/face/train_afew'
-            #list_train = './data/txt/10_cross_Harshinee_v2/Train'+cross_fold+'.txt'
-            list_train = './data/txt/10_cross_Harshinee_task/iter_'+str(itt)+'/Train'+cross_fold+'-'+task+'.txt'
+            root_train = './data/face/train'
+            list_train = './data/txt/iter_'+str(itt)+'/Train'+cross_fold+'-'+task+'.txt'
             batchsize_train= 48
-            #root_eval = './data/face/train_afew_whole_video_concat'
-            root_eval = './data/face/train_afew'
-            #list_eval = './data/txt/10_cross_Harshinee_v2/Val'+cross_fold+'.txt'
-            list_eval = './data/txt/10_cross_Harshinee_task/iter_'+str(itt)+'/Val'+cross_fold+'-'+task+'.txt'
+            root_eval = './data/face/train'
+            list_eval = './data/txt/iter_'+str(itt)+'/Val'+cross_fold+'-'+task+'.txt'
             batchsize_eval= 65
             train_loader, val_loader = load.afew_faces_fan(root_train, list_train, batchsize_train, root_eval, list_eval, batchsize_eval)
             ''' Load model '''
@@ -50,11 +46,7 @@ def main():
             model = load.model_parameters(_structure, _parameterDir)
             model.module.pred_fc1 = nn.Linear(512, 2).cuda()
             model.module.pred_fc2 = nn.Linear(1024, 2).cuda()
-            #_parameterDir = './model_relation_correct/original/self_relation-attention_1_74.2424'
-            #model = load.model_parameters(_structure, _parameterDir)
             ''' Loss & Optimizer '''
-            #train_para = list(model.module.pred_fc1.parameters()) + list(model.module.pred_fc2.parameters())
-            #optimizer = torch.optim.SGD(train_para, args.lr, momentum=0.9, weight_decay=1e-4)
             optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), args.lr, momentum=0.9, weight_decay=1e-4)
             lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=60, gamma=0.2)
             cudnn.benchmark = True
@@ -181,7 +173,6 @@ def val(val_loader, model, at_type, logger):
             pred_score  = model(vectors=output_store_fc, vm=weightmean_sourcefc, alphas_from1=output_alpha, index_matrix=index_matrix, phrase='eval', AT_level='second_level')
         acc_video = util.accuracy(pred_score.cpu(), target_vector.cpu(), topk=(1,))
         output_results = np.array(torch.argmax(pred_score.cpu(), dim=1))
-        np.save('output_results.npy', output_results)
         topVideo.update(acc_video[0], i + 1)
         logger.print(' *Acc@Video {topVideo.avg:.4f} '.format(topVideo=topVideo))
         return topVideo.avg

@@ -28,17 +28,15 @@ from matplotlib.colors import LinearSegmentedColormap
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cate2label = {0: 'healthy', 1: 'dementia', 'healthy': 0, 'dementia': 1}
 
-task = 'Memory'
-#task = 'PupilCalib'
+task = 'PupilCalib'
 #task = 'CookieTheft' 
 #task = 'Reading'                                                                                                                                                
 itt = 1                                                                                                                                                          
 cross_fold = str(1)                                                                                                                                              
-load_file_path = '/h/shchou/projects/Emotion_FAN/data/txt/10_cross_Harshinee_task/iter_'+str(itt)+'/'                                                            
-load_img_path = '/h/shchou/projects/Emotion_FAN/data/face/train_afew/'                                                                                           
-save_img_path = '/h/shchou/projects/Emotion_FAN/data/visualization/' + task + '/iter_'+str(itt)+'/'+cross_fold+'/'
-model_test_path = '/h/shchou/projects/Emotion_FAN/model_10_Harshinee_task_onlylasttwo/' + task + '/iter_'+str(itt)+'/'
-#model_test_path = '/h/shchou/projects/Emotion_FAN/model_10_Harshinee_task_regression/' + task + '/iter_'+str(itt)+'/'
+load_file_path = 'data/txt/iter_'+str(itt)+'/'                                                            
+load_img_path = 'data/face/train/'
+save_img_path = 'data/visualization/' + task + '/iter_'+str(itt)+'/'+cross_fold+'/'
+model_test_path = task + '/iter_'+str(itt)+'/'
 at_type = 'self_relation-attention'
 
 _structure = networks.resnet18_at(at_type = at_type)
@@ -107,6 +105,5 @@ for fff in file_name:
               ["all", "positive"],
               cmap=default_cmap,
               show_colorbar=True)
-
 
         vis_img = vis_img.savefig(save_img_path + fff.split(' ')[0].split('/')[1] + '/' + ele)

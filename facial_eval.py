@@ -23,28 +23,24 @@ def main():
     args = parser.parse_args()
     best_acc = 0
     at_type = ['self-attention', 'self_relation-attention'][args.at_type]
-    logger = util.Logger('./log/','fan_afew')
+    logger = util.Logger('./log/','facial')
     logger.print('The attention method is {:}, learning rate: {:}'.format(at_type, args.lr))
   
     task = 'PupilCalib' 
     #task = 'CookieTheft' 
     #task = 'Reading'
     AUC_score_all, sensitivity_all, specificity_all, accuracy_all = [], [], [], []
-    for itt in range(6,11): 
+    for itt in range(1,11): 
         AUC_score_iter, sensitivity_iter, specificity_iter, accuracy_iter = [], [], [], []
         for t_fold in range(10):
 
             ''' Load data '''
             cross_fold = str(t_fold)
-            root_train = './data/face/train_afew'
-            #list_train = './data/txt/10_cross_Harshinee_task/Train'+cross_fold+'.txt'
-            list_train = './data/txt/10_cross_Harshinee_task/iter_'+str(itt)+'/Train'+cross_fold+'-'+task+'.txt'
-            #list_train = './data/txt/10_cross_Harshinee_v2/Train'+cross_fold+'-'+task+'.txt'
+            root_train = './data/face/train'
+            list_train = './data/txt/iter_'+str(itt)+'/Train'+cross_fold+'-'+task+'.txt'
             batchsize_train= 48
-            root_eval = './data/face/train_afew'
-            list_eval = './data/txt/10_cross_Harshinee_task/iter_'+str(itt)+'/Test'+cross_fold+'-'+task+'.txt'
-            #list_eval = './data/txt/10_cross_Harshinee_task/Test'+cross_fold+'.txt'
-            #list_eval = './data/txt/10_cross_Harshinee_v2/Test'+cross_fold+'-'+task+'.txt'
+            root_eval = './data/face/train'
+            list_eval = './data/txt/iter_'+str(itt)+'/Test'+cross_fold+'-'+task+'.txt'
             batchsize_eval= 65
             train_loader, val_loader = load.afew_faces_fan(root_train, list_train, batchsize_train, root_eval, list_eval, batchsize_eval)
             ''' Load model '''
@@ -53,10 +49,7 @@ def main():
             model = load.model_parameters(_structure, _parameterDir)
             model.module.pred_fc1 = nn.Linear(512, 2).cuda()
             model.module.pred_fc2 = nn.Linear(1024, 2).cuda()
-            #model_test_path = './model_10_Harshinee/'
-            #model_test_path = './model_10_Harshinee_v2/'
-            #model_test_path = './model_10_Harshinee_onlylasttwo/self_relation-attention/'
-            model_test_path = './model_10_Harshinee_task/'+task+'/iter_'+str(itt)+'/'
+            model_test_path = './'+task+'/iter_'+str(itt)+'/'
             model_file = os.listdir(model_test_path+cross_fold)[0]
             _parameterDir = model_test_path+cross_fold+'/'+model_file
             print(cross_fold, _parameterDir)
@@ -79,7 +72,6 @@ def main():
     print(sensitivity_all)
     print(specificity_all)
     print(accuracy_all)
-    import pdb; pdb.set_trace()
     
 def val(val_loader, model, at_type, logger):
     topVideo = util.AverageMeter()
@@ -128,33 +120,18 @@ def val(val_loader, model, at_type, logger):
         topVideo.update(acc_video[0], i + 1)
         logger.print(' *Acc@Video {topVideo.avg:.4f} '.format(topVideo=topVideo))
 
-
         y_true_flipped = np.array(target_vector.cpu().numpy(), copy=True)
         y_true_flipped[target_vector.cpu().numpy() == 1] = 0
         y_true_flipped[target_vector.cpu().numpy() == 0] = 1
 
         pred_softmax = nn.Softmax(dim=1)
         pred_score_softmax = pred_softmax(pred_score)
-        try:
-            AUC_score = roc_auc_score(y_true_flipped, pred_score_softmax.cpu()[:,0])
-        except:
-            import pdb; pdb.set_trace()
+        AUC_score = roc_auc_score(y_true_flipped, pred_score_softmax.cpu()[:,0])
         
-        #_, pred_idx = torch.max(pred_score_softmax, 1)
-        #tn, fp, fn, tp = confusion_matrix(target_vector.cpu(), pred_idx.cpu()).ravel()
         fpr, tpr, thresholds = roc_curve(target_vector.cpu(), pred_score_softmax.cpu()[:,0], pos_label=0)
         sensitivity, specificity, accuracy = OptimalThresholdSensitivitySpecificity.optimal_threshold_sensitivity_specificity(thresholds[1:], tpr[1:], fpr[1:], target_vector.cpu(), pred_score_softmax.cpu()[:,0])
 
         print('AUC:', AUC_score, 'Sensitivity:', sensitivity, 'Specificity:', specificity, 'Accuracy:', accuracy)
-
-        #print('Sensitivity:', sensitivity)
-        #print('Specificity:', specificity)
-        #print('Accuracy:', accuracy)
-        #print('Sensitivity (TP):', tp/len(target_vector))
-        #print('Specifcity (TN):', tn/len(target_vector))
-        #print('fp:', fp/len(target_vector), 'fn:', fn/len(target_vector))
-
-        print('test data:', len(target_vector))
 
         return topVideo.avg, AUC_score, sensitivity, specificity, accuracy
 if __name__ == '__main__':
