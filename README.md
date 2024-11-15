@@ -19,7 +19,5 @@ For data preparation, please follow [EMOTION_FAN repo](https://github.com/Open-D
 
 ### running experiments
 ```
-# Baseline
-CUDA_VISIBLE_DEVICES=0 python baseline_facial.py
 # Training with relation-attention
 CUDA_VISIBLE_DEVICES=0 python facial_traintest.py --type 1
